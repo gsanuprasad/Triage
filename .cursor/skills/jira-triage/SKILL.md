@@ -9,17 +9,19 @@ This skill processes all issues in the SD project that are in **"Triage"** statu
 
 ## Schedule
 
-Configured on the Cursor Automation scheduled trigger (not in this repo). Intended cron:
+Configured on the Cursor Automation scheduled trigger (not in this repo). Intended cron (two triggers so the last run is exactly 6:00 PM):
 
 ```
-CRON_TZ=Australia/Sydney 0 8-18 * * 1-5
+CRON_TZ=Australia/Sydney */15 8-17 * * 1-5
+CRON_TZ=Australia/Sydney 0 18 * * 1-5
 ```
 
 - **Timezone:** Australia/Sydney
-- **Window:** 8:00 AM – 6:00 PM inclusive, hourly on the hour
+- **Cadence:** every 15 minutes
+- **Window:** 8:00 AM – 6:00 PM inclusive (8:00–5:45 via the first trigger; 6:00 via the second)
 - **Days:** Monday–Friday
 
-Update this at [cursor.com/automations](https://cursor.com/automations) on the Triage automation’s Scheduled trigger.
+Update this at [cursor.com/automations](https://cursor.com/automations) on the Triage automation’s Scheduled trigger(s).
 
 ## Jira Connection Details
 
