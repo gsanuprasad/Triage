@@ -1,11 +1,25 @@
 ---
 name: jira-triage
-description: Automatically triage incoming Jira issues in the SD project (Baseplan Service Desk) that are in "Triage" status. Use this skill whenever the user says "run triage", "triage new tickets", "process the triage queue", "triage SD issues", or asks to process/review/clean up incoming support tickets. Also triggers automatically on a schedule during business hours.
+description: Automatically triage incoming Jira issues in the SD project (Baseplan Service Desk) that are in "Triage" status. Use this skill whenever the user says "run triage", "triage new tickets", "process the triage queue", "triage SD issues", or asks to process/review/clean up incoming support tickets. Also triggers automatically on a schedule during Sydney business hours (see Schedule below).
 ---
 
 # Jira Triage — Baseplan Service Desk (SD)
 
 This skill processes all issues in the SD project that are in **"Triage"** status and performs the standard triage steps automatically. Issues are left **unassigned** after triage.
+
+## Schedule
+
+Configured on the Cursor Automation scheduled trigger (not in this repo). Intended cron:
+
+```
+CRON_TZ=Australia/Sydney 0 8-18 * * 1-5
+```
+
+- **Timezone:** Australia/Sydney
+- **Window:** 8:00 AM – 6:00 PM inclusive, hourly on the hour
+- **Days:** Monday–Friday
+
+Update this at [cursor.com/automations](https://cursor.com/automations) on the Triage automation’s Scheduled trigger.
 
 ## Jira Connection Details
 
