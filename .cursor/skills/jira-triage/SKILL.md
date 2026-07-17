@@ -13,6 +13,17 @@ This skill processes all issues in the SD project that are in **"Triage"** statu
 - **Project**: `SD`
 - **Target status**: `Triage` (status ID: 10900)
 
+## Prerequisites — Atlassian MCP
+
+Before Step 1, confirm Atlassian/Jira MCP tools are available (tool discovery must list an Atlassian/Jira server, not only `Cursor Automation Tools` and `cursor-cloud`).
+
+If Atlassian MCP is missing:
+
+1. Do **not** treat the queue as empty.
+2. Do **not** fall back to raw Jira REST or other unauthenticated APIs.
+3. Stop and report that triage could not run because Jira MCP was not accessible.
+4. Point the owner to `references/mcp-setup.md` (attach Atlassian under the automation’s **Tools → Add Tool or MCP**, then re-run).
+
 ## Step 1 — Fetch all issues in Triage
 
 Run this JQL to get the queue:
