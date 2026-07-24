@@ -21,13 +21,13 @@ Run this JQL to get the queue:
 project = SD AND status = "Triage" ORDER BY created ASC
 ```
 
-Request these fields: `summary`, `description`, `issuetype`, `priority`, `assignee`, `reporter`, `comment`, `customfield_11800`, `customfield_22407`, `customfield_22416`, `customfield_21636`, `customfield_22456`, `customfield_22576`, `customfield_22623`, `versions`, `*all`
+Request these fields: `summary`, `description`, `issuetype`, `priority`, `assignee`, `reporter`, `comment`, `customfield_11800`, `customfield_10201`, `customfield_22407`, `customfield_22416`, `customfield_21636`, `customfield_22456`, `customfield_22576`, `customfield_22623`, `versions`, `*all`
 
 If there are no results, report "No issues currently in Triage." and stop.
 
 ## Step 2 — Process each issue
 
-For each issue, work through these steps in order. Collect all field changes and apply them in a single `editJiraIssue` call (step 2g), then transition (step 2h).
+For each issue, work through these steps in order. Collect all field changes and apply them in a single `editJiraIssue` call (step 2g), then transition (step 2h), then clean Request Participants (step 2i).
 
 ### 2a. Clean the Summary
 
@@ -78,6 +78,14 @@ Default is `Support`. Change it based on these signals from summary + descriptio
 
 Use AI judgment for ambiguous cases — look at the full description, not just keywords.
 
+**Application Support Issue Type rule (applies to every task):** When Tempo Team is **Application Support** (`ps_matched` is false — see 2c.2 / 2g), the Issue Type written in step 2g **must remain `Support`** (ID: `10900`).
+
+- Do not change the Issue Type to **Consulting** or any other value for Application Support tasks.
+- Do not apply the keyword / signal Issue Type changes from the table above to the Issue Type field when Tempo Team is Application Support.
+- Do not modify the Issue Type for Application Support tasks under any other circumstances.
+
+The only exception is the Professional Services project classification rule in step 2c.2, which may set Issue Type to `Consulting` together with Tempo Team **Professional Services**.
+
 ### 2c.2. Check PS Project Classification
 
 Read `references/ps-projects.md`.
@@ -90,9 +98,9 @@ Read `references/ps-projects.md`.
 
 | Outcome | Action |
 |---|---|
-| **Exactly one match** | Override Issue Type → `Consulting` (ID: `11104`). Store the matched Job Code and set `ps_matched = true`. Tempo Team will be set to Professional Services in step 2g. |
-| **No match** | No change. Continue with normal triage. Do not add anything to AI Triage Summary. |
-| **Multiple matches** | Do not change Issue Type, Job Code, or Tempo Team. Append to AI Triage Summary: `"Project classification was not applied because multiple matching Customer Codes were found in the reference sheet. Please review and assign the correct project manually."` |
+| **Exactly one match** | Override Issue Type → `Consulting` (ID: `11104`). Store the matched Job Code and set `ps_matched = true`. Tempo Team will be set to Professional Services in step 2g. This is the explicit exception to the Application Support → Support Issue Type rule. |
+| **No match** | No change from the Application Support rule — Issue Type remains `Support`. Continue with normal triage. Do not add anything to AI Triage Summary. |
+| **Multiple matches** | Do not change Issue Type, Job Code, or Tempo Team. Issue Type remains `Support` for Application Support. Append to AI Triage Summary: `"Project classification was not applied because multiple matching Customer Codes were found in the reference sheet. Please review and assign the correct project manually."` |
 
 **When `ps_matched = true`, also look up the Job Code field key:**
 Call `getJiraIssueTypeMetaWithFields` for issue type `Consulting` (ID `11104`) and search the returned field list for a field whose name contains "Job Code" or "Job Number". Note the field key (e.g. `customfield_XXXXX`) — you will use it in step 2g to set the Job Code value from the reference.
@@ -303,7 +311,9 @@ If no relevant task is found, omit the Related section entirely (do not write "N
 
 Call `editJiraIssue` with all collected changes:
 - `summary` — cleaned value from 2a
-- `issuetype` — classified value from 2c (use the issue type ID, not name)
+- `issuetype` — use the issue type ID, not name:
+  - If `ps_matched = true`: `Consulting` (ID: `11104`) from step 2c.2 (Professional Services Tempo Team)
+  - If Tempo Team is **Application Support** (`ps_matched` is false): always `Support` (ID: `10900`). Do not set Consulting or any other Issue Type.
 - `priority` — from 2d (use priority name exactly, e.g. `(5) Normal`, `(2) High`, `(0) Critical`)
 - `description` — cleaned value from 2e
 - `assignee` — do **not** set; leave unassigned
@@ -371,3 +381,19 @@ Once all field updates in 2g have been applied, move the issue out of Triage.
 4. If no transition named "Triaged" is available on the issue (e.g. a custom workflow variant), do not guess at an alternative. Leave the issue in Triage status, note the discrepancy in the AI Triage Summary, and flag it for manual review.
 
 Do not set an assignee as part of this transition — issues are left unassigned per the top-level instruction.
+
+### 2i. Remove Baseplan Support Emails from Request Participants
+
+After triage field updates (and transition, when it succeeded), review **Request Participants** (`customfield_10201`).
+
+Remove a participant only when their `emailAddress` or `displayName` matches one of these addresses (case-insensitive):
+
+* `helpdesk@baseplan.com`
+* `baseplanservicedesk@baseplanonline.com`
+* `support@baseplan.com`
+
+**Rules:**
+- Only remove these three addresses. Leave all other request participants unchanged.
+- If none of the three are present, do not edit Request Participants.
+- If one or more are present, call `editJiraIssue` and set `customfield_10201` to the filtered list of remaining participants as an array of `{"accountId": "<id>"}` objects (include every participant that was not removed). If the filtered list is empty, set `customfield_10201` to `[]`.
+- Apply this cleanup on every task processed by the skill, including when the Triaged transition was unavailable and the issue remained in Triage.
