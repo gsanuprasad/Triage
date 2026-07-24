@@ -27,7 +27,7 @@ If there are no results, report "No issues currently in Triage." and stop.
 
 ## Step 2 — Process each issue
 
-For each issue, work through these steps in order. Collect all field changes and apply them in a single `editJiraIssue` call (step 2g), then transition (step 2h).
+For each issue, work through these steps in order. Collect all field changes and apply them in a single `editJiraIssue` call (step 2g), then transition (step 2h), then clean Request Participants (step 2i).
 
 ### 2a. Clean the Summary
 
