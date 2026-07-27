@@ -26,6 +26,7 @@ Use this table to determine issue priority based on issue category and scope of 
 | Updating Debtor / Creditor / Site / Stock / Fleet / BOM etc. | (1) Critical | (3) High | (6) Normal |
 | Creditor Invoice / Payment | (1) Critical | (3) High | (6) Normal |
 | Security | (1) Critical | (4) High | (6) Normal |
+| Password reset | (2) High | (2) High | (2) High |
 | Reminder Service / Workflow / Gateway | (1) Critical | (4) High | (5) Normal |
 | Producing Auditing / Functional reports | (2) High | (4) High | (6) Normal |
 | Mismatch/Imbalance in Asset, Fleet or Stock Quantity | (2) High | (4) High | (6) Normal |
