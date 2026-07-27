@@ -389,11 +389,13 @@ After triage field updates (and transition, when it succeeded), review **Request
 Remove a participant only when their `emailAddress` or `displayName` matches one of these addresses (case-insensitive):
 
 * `helpdesk@baseplan.com`
+* `baseplanservicedesk@baseplan.com`
 * `baseplanservicedesk@baseplanonline.com`
 * `support@baseplan.com`
 
 **Rules:**
-- Only remove these three addresses. Leave all other request participants unchanged.
-- If none of the three are present, do not edit Request Participants.
+- Only remove these addresses. Leave all other request participants unchanged.
+- Match on either `emailAddress` or `displayName` (some customer accounts show the mailbox only in `displayName`).
+- If none of the listed addresses are present, do not edit Request Participants.
 - If one or more are present, call `editJiraIssue` and set `customfield_10201` to the filtered list of remaining participants as an array of `{"accountId": "<id>"}` objects (include every participant that was not removed). If the filtered list is empty, set `customfield_10201` to `[]`.
 - Apply this cleanup on every task processed by the skill, including when the Triaged transition was unavailable and the issue remained in Triage.
