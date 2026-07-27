@@ -1,6 +1,6 @@
 ---
 name: jira-triage
-description: Automatically triage incoming Jira issues in the SD project (Baseplan Service Desk) that are in "Triage" status. Use this skill whenever the user says "run triage", "triage new tickets", "process the triage queue", "triage SD issues", or asks to process/review/clean up incoming support tickets. Also triggers automatically on a schedule during business hours.
+description: Automatically triage incoming Jira issues in the SD project (Baseplan Service Desk) that are in "Triage" status. Use this skill whenever the user says "run triage", "triage new tickets", "process the triage queue", "triage SD issues", or asks to process/review/clean up incoming support tickets. Also triggers automatically on a schedule during business hours. Always remove blocked Baseplan support mailboxes from Request Participants and verify they are gone before finishing each issue.
 ---
 
 # Jira Triage — Baseplan Service Desk (SD)
