@@ -7,6 +7,9 @@ Use this table to determine issue priority based on issue category and scope of 
 - **Some** — affects multiple users or a team
 - **One** — affects a single named user
 
+**Special conditions:**
+- **Password reset** — if the request is for a password reset (including reset / forgot password / unable to reset password), set priority to `(2) High` regardless of scope.
+
 | Issue Category | All | Some | One |
 |---|---|---|---|
 | Unable to login / System down | (0) Critical | (0) Critical | (2) High |
