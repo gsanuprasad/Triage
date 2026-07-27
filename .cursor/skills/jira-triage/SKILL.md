@@ -7,6 +7,23 @@ description: Automatically triage incoming Jira issues in the SD project (Basepl
 
 This skill processes all issues in the SD project that are in **"Triage"** status and performs the standard triage steps automatically. Issues are left **unassigned** after triage.
 
+## Mandatory completion (every issue)
+
+An issue is **not** finished until all of the following are done:
+
+1. Field updates applied (step 2g), including Request Participants cleanup when needed
+2. Transition attempted (step 2h)
+3. Request Participants **verified clean** (step 2i) — re-read the field and confirm blocked support mailboxes are gone
+
+Do not move to the next issue, and do not end the run, while any blocked support mailbox remains on Request Participants for an issue you processed.
+
+**Blocked Request Participant emails** (case-insensitive; match `emailAddress` or `displayName`):
+
+* `helpdesk@baseplan.com`
+* `baseplanservicedesk@baseplan.com`
+* `baseplanservicedesk@baseplanonline.com`
+* `support@baseplan.com`
+
 ## Jira Connection Details
 
 - **Cloud ID**: `47ce615b-398d-4e09-99f5-d0c64b17b2a5`
@@ -27,7 +44,7 @@ If there are no results, report "No issues currently in Triage." and stop.
 
 ## Step 2 — Process each issue
 
-For each issue, work through these steps in order. Collect all field changes and apply them in a single `editJiraIssue` call (step 2g), then transition (step 2h), then clean Request Participants (step 2i).
+For each issue, work through these steps in order. Collect all field changes **including Request Participants cleanup**, apply them in a single `editJiraIssue` call (step 2g), then transition (step 2h), then **mandatory verify** Request Participants (step 2i).
 
 ### 2a. Clean the Summary
 
@@ -309,7 +326,15 @@ If no relevant task is found, omit the Related section entirely (do not write "N
 
 ### 2g. Apply Field Updates
 
-Call `editJiraIssue` with all collected changes:
+**Before calling `editJiraIssue`**, build the Request Participants cleanup from the current `customfield_10201` value:
+
+1. Start from the current participants list (may be empty).
+2. Drop any participant whose `emailAddress` or `displayName` matches a **Blocked Request Participant email** (see top of skill).
+3. Keep every other participant unchanged.
+4. If any blocked address was removed, include `customfield_10201` in this edit as an array of `{"accountId": "<id>"}` for the remaining participants (`[]` if none remain).
+5. If no blocked address was present, omit `customfield_10201` from this edit.
+
+Call `editJiraIssue` with all collected changes **in this same call** (do not defer Request Participants cleanup to later):
 - `summary` — cleaned value from 2a
 - `issuetype` — use the issue type ID, not name:
   - If `ps_matched = true`: `Consulting` (ID: `11104`) from step 2c.2 (Professional Services Tempo Team)
@@ -328,6 +353,7 @@ Call `editJiraIssue` with all collected changes:
 - `versions` — Affected Version inherited from 2f, e.g. `[{"id": "23695"}]`
 - `customfield_22576` — Maintenance Branch inherited from 2f, e.g. `{"id": "14427"}` (Yes) or `{"id": "14428"}` (No) — only if found
 - `customfield_22410` — Module, determined in step 2c.5 (single-element array, e.g. `[{"id": "14135"}]`)
+- `customfield_10201` — Request Participants cleaned as above (**required in this call when any blocked mailbox was present**)
 - `customfield_22623` — AI Triage Summary (see format below)
 
 
@@ -382,20 +408,17 @@ Once all field updates in 2g have been applied, move the issue out of Triage.
 
 Do not set an assignee as part of this transition — issues are left unassigned per the top-level instruction.
 
-### 2i. Remove Baseplan Support Emails from Request Participants
+### 2i. Verify Request Participants Cleanup (mandatory)
 
-After triage field updates (and transition, when it succeeded), review **Request Participants** (`customfield_10201`).
+This step is **mandatory for every issue**, even if step 2g already cleaned Request Participants, and even if the Triaged transition failed and the issue is still in Triage.
 
-Remove a participant only when their `emailAddress` or `displayName` matches one of these addresses (case-insensitive):
+1. Re-fetch the issue fields including `customfield_10201` (do not rely on memory of the earlier value).
+2. Check whether any participant still matches a **Blocked Request Participant email** (case-insensitive on `emailAddress` or `displayName`).
+3. If any blocked address is still present:
+   - Call `editJiraIssue` and set `customfield_10201` to the filtered remaining participants as `[{"accountId": "<id>"}, ...]` (`[]` if none remain).
+   - Re-fetch `customfield_10201` again.
+   - If a blocked address is **still** present after the retry, flag it in the run report for that issue key and note `⚠️ Request Participants cleanup failed — blocked support mailbox still present` (update AI Triage Summary if still editable).
+4. If no blocked address is present, continue to the next issue.
+5. **Do not** mark the issue complete, move to the next issue, or end the automation run while a blocked support mailbox remains on an issue you processed — unless the retry already failed and was flagged.
 
-* `helpdesk@baseplan.com`
-* `baseplanservicedesk@baseplan.com`
-* `baseplanservicedesk@baseplanonline.com`
-* `support@baseplan.com`
-
-**Rules:**
-- Only remove these addresses. Leave all other request participants unchanged.
-- Match on either `emailAddress` or `displayName` (some customer accounts show the mailbox only in `displayName`).
-- If none of the listed addresses are present, do not edit Request Participants.
-- If one or more are present, call `editJiraIssue` and set `customfield_10201` to the filtered list of remaining participants as an array of `{"accountId": "<id>"}` objects (include every participant that was not removed). If the filtered list is empty, set `customfield_10201` to `[]`.
-- Apply this cleanup on every task processed by the skill, including when the Triaged transition was unavailable and the issue remained in Triage.
+Only remove the blocked support mailboxes listed at the top of this skill. Leave all other request participants unchanged.
