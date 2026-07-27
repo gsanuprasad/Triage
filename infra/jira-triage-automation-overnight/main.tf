@@ -21,22 +21,12 @@ resource "cursor_platform_workflow" "jira_triage_overnight" {
   git_repo   = var.git_repo
   git_branch = var.git_branch
 
-  # Every 15 minutes from 22:00 through 06:45 Australia/Sydney, plus 07:00
-  # so the window is 10 PM–7 AM inclusive.
+  # One cron: every 15 minutes from 22:00 through 07:45 Australia/Sydney
+  # (10 PM–7 AM window; a few runs after 7 AM are intentional).
   trigger = [
     {
       cron = {
-        schedule = "CRON_TZ=Australia/Sydney */15 22-23 * * *"
-      }
-    },
-    {
-      cron = {
-        schedule = "CRON_TZ=Australia/Sydney */15 0-6 * * *"
-      }
-    },
-    {
-      cron = {
-        schedule = "CRON_TZ=Australia/Sydney 0 7 * * *"
+        schedule = "CRON_TZ=Australia/Sydney */15 22-23,0-7 * * *"
       }
     }
   ]
