@@ -7,6 +7,9 @@ Use this table to determine issue priority based on issue category and scope of 
 - **Some** — affects multiple users or a team
 - **One** — affects a single named user
 
+**Special conditions:**
+- **Password reset** — if the request is for a password reset (including reset / forgot password / unable to reset password), set priority to `(2) High` regardless of scope.
+
 | Issue Category | All | Some | One |
 |---|---|---|---|
 | Unable to login / System down | (0) Critical | (0) Critical | (2) High |
@@ -26,6 +29,7 @@ Use this table to determine issue priority based on issue category and scope of 
 | Updating Debtor / Creditor / Site / Stock / Fleet / BOM etc. | (1) Critical | (3) High | (6) Normal |
 | Creditor Invoice / Payment | (1) Critical | (3) High | (6) Normal |
 | Security | (1) Critical | (4) High | (6) Normal |
+| Password reset | (2) High | (2) High | (2) High |
 | Reminder Service / Workflow / Gateway | (1) Critical | (4) High | (5) Normal |
 | Producing Auditing / Functional reports | (2) High | (4) High | (6) Normal |
 | Mismatch/Imbalance in Asset, Fleet or Stock Quantity | (2) High | (4) High | (6) Normal |
