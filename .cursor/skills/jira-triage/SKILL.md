@@ -101,7 +101,7 @@ Use AI judgment for ambiguous cases — look at the full description, not just k
 - Do not apply the keyword / signal Issue Type changes from the table above to the Issue Type field when Tempo Team is Application Support.
 - Do not modify the Issue Type for Application Support tasks under any other circumstances.
 
-The only exception is the Professional Services project classification rule in step 2c.2, which may set Issue Type to `Consulting` together with Tempo Team **Professional Services**.
+The only exception is the Professional Services project classification rule in step 2c.2, which may set Issue Type to `Consulting` together with Tempo Team **Professional Services** — but only when the reporter is an external customer (not a Baseplan staff member).
 
 ### 2c.2. Check PS Project Classification
 
@@ -113,9 +113,22 @@ Read `references/ps-projects.md`.
 3. Compare against each Customer name in the reference table, also normalized (lowercase, stripped)
 4. Exact match only — no partial matching, no guessing, no inferring
 
+**Baseplan reporter check (apply before PS routing):**
+
+The **Reporter** field is the main contact. Before routing a PS project match to Professional Services, inspect `reporter`:
+
+| Reporter signal | Is Baseplan staff? |
+|---|---|
+| `reporter.emailAddress` ends with `@baseplan.com` (case-insensitive) | Yes |
+| Email unavailable and `reporter.accountType` is `atlassian` | Yes |
+| Otherwise | No — treat as external customer contact |
+
+If the organisation matches `ps-projects.md` **and** the reporter is a Baseplan staff member, **do not** apply PS classification. Leave `ps_matched = false`, keep the issue type from step 2c (typically `Support`), and route to Application Support in step 2g. Note in AI Triage Summary: `PS project match (<customer>) skipped — reporter is a Baseplan staff member (<reporter display name or email>). Routed to Application Support.`
+
 | Outcome | Action |
 |---|---|
-| **Exactly one match** | Override Issue Type → `Consulting` (ID: `11104`). Store the matched Job Code and set `ps_matched = true`. Tempo Team will be set to Professional Services in step 2g. This is the explicit exception to the Application Support → Support Issue Type rule. |
+| **Exactly one match, reporter is external** | Override Issue Type → `Consulting` (ID: `11104`). Store the matched Job Code and set `ps_matched = true`. Tempo Team will be set to Professional Services in step 2g. This is the explicit exception to the Application Support → Support Issue Type rule. |
+| **Exactly one match, reporter is Baseplan staff** | Do not apply PS classification. Leave `ps_matched = false`. Triage as normal Support; Tempo Team → Application Support in step 2g. |
 | **No match** | No change from the Application Support rule — Issue Type remains `Support`. Continue with normal triage. Do not add anything to AI Triage Summary. |
 | **Multiple matches** | Do not change Issue Type, Job Code, or Tempo Team. Issue Type remains `Support` for Application Support. Append to AI Triage Summary: `"Project classification was not applied because multiple matching Customer Codes were found in the reference sheet. Please review and assign the correct project manually."` |
 
