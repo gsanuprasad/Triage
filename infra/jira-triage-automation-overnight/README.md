@@ -4,6 +4,8 @@ Schedules the `jira-triage` skill every **15 minutes from 10:00 PM Australia/Syd
 
 This is a **second** automation alongside the daytime 8 AM–6 PM schedule. Same skill, same prompt, different hours.
 
+Keep `*/15` for SLA. If Cursor rate-limits concurrent cloud agents, recover using [`../RATE-LIMIT.md`](../RATE-LIMIT.md) — do not slow the cron.
+
 ## Schedule (single cron)
 
 ```
@@ -47,7 +49,7 @@ terraform apply
 
 ## Notes
 
-- Keep the daytime automation as-is; this overnight automation does not replace it.
+- Keep the daytime automation as a separate schedule; this overnight automation does not replace it. Daytime cron stays `*/15` for SLA.
 - Pull-request tools stay disabled; triage only touches Jira.
 - If Atlassian tools are missing at runtime, remove and re-add the MCP entry named exactly `Atlassian`.
 - Weekday-only? Change the cron day-of-week field from `*` to `1-5`.

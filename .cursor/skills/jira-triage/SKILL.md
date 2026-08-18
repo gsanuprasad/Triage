@@ -1,11 +1,15 @@
 ---
 name: jira-triage
-description: Automatically triage incoming Jira issues in the SD project (Baseplan Service Desk) that are in "Triage" status. Use this skill whenever the user says "run triage", "triage new tickets", "process the triage queue", "triage SD issues", or asks to process/review/clean up incoming support tickets. Also triggers automatically on schedule (daytime 8 AM–6 PM and overnight 10 PM–7 AM Sydney). Always remove blocked Baseplan support mailboxes from Request Participants and verify they are gone before finishing each issue.
+description: Automatically triage incoming Jira issues in the SD project (Baseplan Service Desk) that are in "Triage" status. Use this skill whenever the user says "run triage", "triage new tickets", "process the triage queue", "triage SD issues", or asks to process/review/clean up incoming support tickets. Also triggers automatically on schedule (daytime 8 AM–6 PM and overnight 10 PM–7 AM Sydney, every 15 minutes). Always remove blocked Baseplan support mailboxes from Request Participants and verify they are gone before finishing each issue.
 ---
 
 # Jira Triage — Baseplan Service Desk (SD)
 
 This skill processes all issues in the SD project that are in **"Triage"** status and performs the standard triage steps automatically. Issues are left **unassigned** after triage.
+
+## Concurrency (scheduled cloud runs)
+
+Process the queue **sequentially in this one run**. Do not launch subagents, parallel cloud agents, or the Task tool. Extra agents count toward Cursor's concurrent cloud-agent cap and cause later cron ticks to fail with "Rate limited / too many concurrent runs". Recovery steps: `infra/RATE-LIMIT.md`.
 
 ## Mandatory completion (every issue)
 
