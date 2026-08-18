@@ -17,16 +17,45 @@ This is a **Cursor platform limit**, not a Jira API limit. Failed ticks usually 
 
 Two automations fire about **84 cloud agents per weekday** at a 15-minute cadence. After each run the agent stays **IDLE** (not archived). Cursor has repeatedly counted stale IDLE agents toward the concurrent cap ([forum](https://forum.cursor.com/t/cloud-agents-simultaneous-limit-what-are-the-actual-numbers-per-plan/154013)).
 
-## Immediate recovery (do this first)
+## How to see the idle triage agents (they are hidden by default)
 
-1. Open [Cloud Agents](https://cursor.com/agents).
-2. Filter to this repo (`gsanuprasad/Triage`) and status **Idle**.
-3. **Archive** old completed/idle runs (`Sd project triage`, `Sd issues triage`, `Jira SD project triage`). Leave only a current run if one is actually working.
-4. Confirm no other personal/team cloud agents are **Running** (other repos count toward the same cap).
-5. Open [Jira Triage — SD](https://cursor.com/automations/71809cde-8651-11f1-a7d1-d6b4613131ce) → **Test run** (or wait for the next cron).
-6. If it still rate-limits, wait 10–15 minutes after archiving and retry, or ask a team admin to check on-demand usage. Cursor support: `hi@cursor.com`.
+The ~199 figure is **not** shown as a badge on the Automations run summary. Each successful cron tick creates a finished cloud agent named `Sd project triage` or `Sd issues triage`. The API calls that state **IDLE** (finished, VM still listed). The web UI has **no “Idle” filter**, and **Automations-sourced agents are hidden** until you turn that source on — same pattern as [SDK runs](https://cursor.com/docs/sdk/typescript.md#creating-agents).
 
-Archiving is the unblock. Do not keep hitting Play while the error is showing — that makes the cap worse.
+Do **not** look at:
+
+- The automation **Run summary** (that list is cron ticks; rate-limited ticks never become agents)
+- [Dashboard → Cloud Agents](https://cursor.com/dashboard/cloud-agents) (environments/settings, not the run list)
+- The desktop editor chat sidebar (only a short window of interactive chats)
+
+**View them:**
+
+1. Open [https://cursor.com/agents](https://cursor.com/agents) in the browser (not the dashboard).
+2. In the sidebar, try **My agents**, then **Team agents** (Automations are Team Visible; some lists split ownership).
+3. Click **Filter → Source** and enable **Automations** (also enable **API** / **SDK** if those toggles exist). Cursor hides non-interactive sources by default.
+4. Optionally filter the repo to `gsanuprasad/Triage`. Names look like `Sd project triage`, `Sd issues triage`, `SD project issue triage`.
+5. Scroll / page — the list is newest-first and paginated. There is no “199 idle” counter.
+
+Direct examples from this morning (Sydney), still unarchived:
+
+- [12:30 run](https://cursor.com/agents/bc-a4a39dac-39d1-403a-a7c9-e15b92d85463)
+- [12:15 run](https://cursor.com/agents/bc-93241c27-48b4-4877-adee-d33a2af55837)
+- [12:00 run](https://cursor.com/agents/bc-089e5cfa-9de1-47e2-8659-3b2daef3dfed)
+
+You can also open a run from the automation’s history: click a **Succeeded** row (not a Rate limited row) → it opens that agent.
+
+## Archive (one at a time in the UI)
+
+There is **no bulk archive** for cloud agents in the UI. Archive is per agent and reversible.
+
+1. Open an agent from the filtered list or a direct URL above.
+2. Use the **⋯** (or overflow) menu → **Archive**. That hides it from the active list and stops the run.
+3. Repeat for old finished triage conversations. Skip anything still **Running**.
+
+Permanent delete is API-only (`DELETE https://api.cursor.com/v1/agents/{id}`). Archive is `POST https://api.cursor.com/v1/agents/{id}/archive` — loop that if you need to clear hundreds.
+
+After archiving, run a **Test run** on the daytime automation (or wait for the next cron). If it still rate-limits, wait 10–15 minutes and retry, or ask a team admin to check on-demand usage (`hi@cursor.com`).
+
+Archiving is a workaround Cursor staff recommended when stale finished agents were counted toward the cap. The durable fix is still slowing the cron (below). Do not keep hitting Play while the error is showing.
 
 ## Durable fix: slow the cron (required)
 
