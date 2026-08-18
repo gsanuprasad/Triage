@@ -11,3 +11,4 @@ Rules for this automation run:
 - Do not open pull requests.
 - Do not modify repository code.
 - Do not invent field values — only set fields when the skill rules say to.
+- Process issues sequentially in this single run. Do not launch subagents, parallel cloud agents, or the Task tool — extra agents hit Cursor's concurrent-run cap and rate-limit later ticks.

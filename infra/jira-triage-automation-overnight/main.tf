@@ -21,12 +21,13 @@ resource "cursor_platform_workflow" "jira_triage_overnight" {
   git_repo   = var.git_repo
   git_branch = var.git_branch
 
-  # One cron: every 15 minutes from 22:00 through 07:45 Australia/Sydney
-  # (10 PM–7 AM window; a few runs after 7 AM are intentional).
+  # One cron: every 30 minutes from 22:00 through 07:30 Australia/Sydney
+  # (10 PM–7 AM window). 15-minute ticks hit Cursor's concurrent cloud-agent
+  # cap; see infra/RATE-LIMIT.md.
   trigger = [
     {
       cron = {
-        schedule = "CRON_TZ=Australia/Sydney */15 22-23,0-7 * * *"
+        schedule = "CRON_TZ=Australia/Sydney */30 22-23,0-7 * * *"
       }
     }
   ]
