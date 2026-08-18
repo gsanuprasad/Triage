@@ -1,21 +1,21 @@
 # Jira Triage Cloud Automation — Overnight
 
-Schedules the `jira-triage` skill every **30 minutes from 10:00 PM Australia/Sydney**, continuing through the early morning (including a run at 7:30 AM).
+Schedules the `jira-triage` skill every **15 minutes from 10:00 PM Australia/Sydney**, continuing through the early morning (including a few runs after 7:00 AM).
 
 This is a **second** automation alongside the daytime 8 AM–6 PM schedule. Same skill, same prompt, different hours.
 
-A 15-minute cadence creates too many cloud agents and trips Cursor's concurrent-run rate limit. See [`../RATE-LIMIT.md`](../RATE-LIMIT.md).
+Keep `*/15` for SLA. If Cursor rate-limits concurrent cloud agents, recover using [`../RATE-LIMIT.md`](../RATE-LIMIT.md) — do not slow the cron.
 
 ## Schedule (single cron)
 
 ```
-CRON_TZ=Australia/Sydney */30 22-23,0-7 * * *
+CRON_TZ=Australia/Sydney */15 22-23,0-7 * * *
 ```
 
 | Window (Sydney) | Fires |
 |---|---|
-| 22:00–23:30 | every 30 minutes |
-| 00:00–07:30 | every 30 minutes |
+| 22:00–23:45 | every 15 minutes |
+| 00:00–07:45 | every 15 minutes |
 
 Timezone is handled by `CRON_TZ` (AEDT/AEST). Cron defaults to UTC without that prefix.
 
@@ -49,7 +49,7 @@ terraform apply
 
 ## Notes
 
-- Keep the daytime automation as a separate schedule; this overnight automation does not replace it. Daytime cron must also use `*/30` (not `*/15`) — see [`../RATE-LIMIT.md`](../RATE-LIMIT.md).
+- Keep the daytime automation as a separate schedule; this overnight automation does not replace it. Daytime cron stays `*/15` for SLA.
 - Pull-request tools stay disabled; triage only touches Jira.
 - If Atlassian tools are missing at runtime, remove and re-add the MCP entry named exactly `Atlassian`.
 - Weekday-only? Change the cron day-of-week field from `*` to `1-5`.

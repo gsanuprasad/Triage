@@ -55,27 +55,30 @@ Permanent delete is API-only (`DELETE https://api.cursor.com/v1/agents/{id}`). A
 
 After archiving, run a **Test run** on the daytime automation (or wait for the next cron). If it still rate-limits, wait 10–15 minutes and retry, or ask a team admin to check on-demand usage (`hi@cursor.com`).
 
-Archiving is a workaround Cursor staff recommended when stale finished agents were counted toward the cap. The durable fix is still slowing the cron (below). Do not keep hitting Play while the error is showing.
+Archiving is a workaround Cursor staff recommended when stale finished agents were counted toward the cap. Do not keep hitting Play while the error is showing.
 
-## Durable fix: slow the cron (required)
+## Keep the 15-minute cron (SLA)
 
-Edit both automations in the Cursor UI. Change `*/15` to `*/30`.
+Do **not** slow the schedule. Daytime and overnight stay at `*/15` so new SD tickets can be triaged within the SLA window.
 
 **Daytime** — [Jira Triage — SD](https://cursor.com/automations/71809cde-8651-11f1-a7d1-d6b4613131ce)
 
 ```
-CRON_TZ=Australia/Sydney */30 8-18 * * 1-6
+CRON_TZ=Australia/Sydney */15 8-18 * * 1-6
 ```
 
 **Overnight** — [Jira Triage — SD Overnight](https://cursor.com/automations/13ac9789-8a13-11f1-b532-320a589b8025)
 
 ```
-CRON_TZ=Australia/Sydney */30 22-23,0-7 * * *
+CRON_TZ=Australia/Sydney */15 22-23,0-7 * * *
 ```
 
-After saving, Terraform for overnight should match (`infra/jira-triage-automation-overnight`). Daytime is UI-only unless you import it later.
+To keep `*/15` without another 2-hour gap:
 
-30 minutes still covers new SD tickets promptly and cuts cloud-agent starts roughly in half (~42/day instead of ~84). If rate limits return, switch both to `0 *` (hourly).
+1. Do not start extra desktop/cloud investigation agents during 8 AM–6 PM Sydney unless a triage tick is allowed to fail.
+2. Triage runs must stay sequential (no Task/subagents) — already in the overnight prompt and skill.
+3. Never **Play** an automation while a tick is still running. Cursor skips a *scheduled* overlap; manual Play does not.
+4. If the cap hits again, archive old finished Automations agents (above) or ask Cursor support (`hi@cursor.com`) to raise the concurrent cloud-agent limit for this team. Name automation `71809cde-8651-11f1-a7d1-d6b4613131ce` and the SLA need for 15-minute ticks.
 
 ## Avoid stacking extra agents
 
@@ -84,7 +87,7 @@ After saving, Terraform for overnight should match (`infra/jira-triage-automatio
 - Triage prompts must **not** launch subagents / parallel cloud agents (`Task` tool). One sequential run per tick.
 - Cursor skips a *scheduled* tick if that same automation still has a run in progress. Manual **Play** does not skip — never Play while a run is active.
 
-## If it keeps failing after archive + 30-minute cron
+## If it keeps failing at 15 minutes
 
 1. Check [Cursor dashboard usage](https://cursor.com/dashboard) — team on-demand budget at 100% also blocks automations.
 2. Recreate the daytime automation (stale “still running” records can skip all future crons; [forum](https://forum.cursor.com/t/cursor-automations-stopped-running-on-hourly-schedule/155679)).
