@@ -1,0 +1,4 @@
+{
+  "name": "Jira Triage Automation (Terraform)",
+  "install": "bash .cursor/install.sh"
+}
